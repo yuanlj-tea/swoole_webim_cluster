@@ -15,7 +15,7 @@ class Server
 {
     private $serv = null;
 
-    private static $servPort = 9501;
+    private static $servPort = 9502;
 
     private $swoole_set = [
         'worker_num' => 4,
@@ -44,15 +44,24 @@ class Server
     public function sendMsgProcess()
     {
         $sendMsgProcess = new \swoole_process(function ($process) {
-            swoole_set_process_name("php swoole " . __CLASS__);
             try {
                 $conf = Config::getInstance()->getConf('config.redis');
                 $redis = new Predis($conf);
-                $redis->getRedis()->subscribe([$this->channel_name], function ($message) {
-                    pp($message);
+                $redis->getRedis()->subscribe([$this->channel_name], function ($instance, $channelName, $message) {
+                    $pushMsg = json_decode($message, 1);
+                    $localIpPort = Room::getIpPort();
+                    pp($localIpPort,$pushMsg['disfd']['server']);
+                    if ($pushMsg['disfd']['server'] != $localIpPort) {
+                        foreach ($this->serv->connections as $fd) {
+                            pp("其它服务器发来的消息:本机fd:".$fd);
+                            $pushMsg['data']['mine'] = 0;
+                            $this->serv->push($fd, json_encode($pushMsg));
+                        }
+                    }
+                    return true;
                 });
             } catch (\Exception $e) {
-
+                throw new \Exception($e->getMessage());
             }
         });
         $this->serv->addProcess($sendMsgProcess);
@@ -197,10 +206,10 @@ class Server
             }
             $this->serv->push($fd, json_encode($pushMsg));
         }
-        $pushMsg['disfd'] = Room::getDistributeFd($myfd);
+        $pushMsg['disfd'] = json_decode(Room::getDistributeFd($myfd), true);
         $conf = Config::getInstance()->getConf('config.redis');
         $redis = (new Predis($conf))->getRedis();
-        pp("发布消息".json_encode($pushMsg));
+        pp("发布消息" . json_encode($pushMsg));
         $redis->publish($this->channel_name, json_encode($pushMsg));
     }
 

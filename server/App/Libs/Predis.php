@@ -29,7 +29,7 @@ class Predis
     //连接属性数组
     protected $attr = array(
         //连接超时时间，redis配置文件中默认为300秒
-        'timeout' => 30,
+        'timeout' => 0,
         //选择的数据库。
         'db_id' => 0,
     );
@@ -48,7 +48,7 @@ class Predis
         $this->redis = new \Redis();
         $this->port = $config['port'] ? $config['port'] : 6379;
         $this->host = $config['host'];
-        $this->redis->connect($this->host, $this->port, $this->attr['timeout']);
+        $this->redis->pconnect($this->host, $this->port, $this->attr['timeout']);
         if ($config['auth']) {
             $this->auth($config['auth']);
             $this->auth = $config['auth'];
