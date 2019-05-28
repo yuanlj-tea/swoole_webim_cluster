@@ -1,13 +1,16 @@
-1.先将client目录放置在您的web服务器下，打开client/static/js/init.js 文件，将该文件的配置修改成自己的域名或者IP。
+##### 基于swoole实现的聊天室
 
-2.打开server目录，首先将rooms目录以及其子目录权限设为777，确保该目录可写。将client/uploads目录设置为777可写。
+> 后台可以部署多台websocket服务器，通过nginx反向代理，配置负载均衡
 
-3.修改server/config.inc.php 文件。修改DOMAIN和redis配置。
+1、先将client目录放置在您的web服务器下，打开client/static/js/init.js 文件，配置domain(client目录所配置的域名)、wsserver(多机：nginx负载均衡的ip，单机：单机的websocket ip)
 
-> define("DOMAIN","[http://192.168.79.206.:8081](http://192.168.79.206:8081/)");
+2、修改server/App/Config/config.php里的redis连接配置；
 
+3、修改server/hsw_server.php里的define('DOMAIN', 'http://192.168.79.206:8081');为client目录所对应的站点域名
 
-4.命令行执行 ：
+4、命令行执行 ：
 
-> /usr/local/php/bin/php /path/server/hsw_server.php
+> php /path/start.php
+
+5、[nginx配置](https://github.com/a1554610616/swoole_webim_cluster/blob/master/upstream.conf)
 
